@@ -4,7 +4,7 @@
 - `emmet.html` - latihan Emmet dan struktur HTML5.
 - `index.html` - artefak utama halaman profil P2.
 - `img/foto - profil.jpg` - gambar yang digunakan pada halaman profil.
-## Implementasi
+## Implementasi 
 Pada P2 saya membangun halaman profil menggunakan struktur HTML5 yang valid,
 elemen semantik, teks, daftar, tautan, dan gambar.
 ## Validasi HTML
