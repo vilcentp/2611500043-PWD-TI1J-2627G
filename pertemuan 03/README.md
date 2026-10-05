@@ -11,7 +11,7 @@
 
 ## Pengujian GET dan POST
 - Hasil pengujian GET: Form mengirim data melalui query string pada URL dan memuat ulang index.html; hanya field yang memiliki atribut name ikut dikirim.
-- Contoh URL encoding yang ditemukan: Spasi pada nama atau pesan dikirim sebagai +, sedangkan karakter khusus seperti `@` pada email dikirim sebagai %40 (contoh: `nama=Vilcent+Pitersen&email=Vilcent%40email.com`).
+- Contoh URL encoding yang ditemukan: Spasi pada nama atau pesan dikirim sebagai +, sedangkan karakter khusus seperti `@` pada email dikirim sebagai %40 (contoh: `nama=Vilcent+Pitersen&email=Vilcent%40email.com`)
 - Hasil pengujian POST: Belum dapat diuji melalui formulir ini karena atribut form saat ini adalah `method="get"`. Untuk menguji POST, ubah menjadi `method="post"` dan gunakan endpoint yang menerima POST.
 
 ## CSS Dasar
