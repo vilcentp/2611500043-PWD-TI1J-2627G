@@ -6,7 +6,7 @@
 
 ## Implementasi Formulir
 - Elemen form yang digunakan: [form, div, label, input, select dan option, textarea, button, br]
-- Tipe input yang digunakan: [saya menggunakan text = mahasiswa, email, number = semester, date = tanggal kunjungan, radio = jenis pesan: pertanyaan atau saran, checkbox = topik yang diminati yaitu HTML/CSS]
+- Tipe input yang digunakan: [saya menggunakan text = mahasiswa, email, number = semester, date = tanggal kunjungan, radio = jenis pesan: pertanyaan atau saran, checkbox = topik yang diminati yaitu HTML/CSS].
 - Atribut validasi yang digunakan: [Atribut validasi yang digunakan: required, minlength, maxlength, min, dan max. Tipe email, number, dan date juga membantu memeriksa format isian.]
 
 ## Pengujian GET dan POST
