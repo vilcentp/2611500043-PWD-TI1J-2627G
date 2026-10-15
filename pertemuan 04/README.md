@@ -1,11 +1,15 @@
-# Pertemuan 4
+# Pertemuan 4 - CSS3 Layout dan Responsive Web Design 
 
-Selamat datang di folder pertemuan 4.
+## Pengembangan - 
+-Perubahan yang dilakukan: [tuliskan secara singkat] 
+-Commit dan push GitHub: [tuliskan secara singkat] 
+## Pengujian 
 
-## Tujuan
-- Mempelajari materi lanjutan pada mata kuliah PWD.
-- Menyimpan catatan, tugas, dan latihan yang terkait dengan pertemuan ini.
+Perangkat bergerak: [ukuran viewport dan hasil pengujian] 
+Desktop: [ukuran viewport dan hasil pengujian] 
+Galat dan perbaikan: [tuliskan jika ada] 
+Validasi CSS: [hasil validasi dan perbaikan yang dilakukan jika terdapat galat] 
 
-## Catatan
-- Gunakan folder ini untuk file tugas, modul, dan latihan.
-- Simpan hasil pekerjaan sesuai materi pertemuan.
+## Repositori 
+URL GitHub: [tempel URL repositori] 
+isi READMI.md berdasarkan hasil pemgembangan, pengujian, dan validasi yang benar-benar dilakukan. 
