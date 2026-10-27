@@ -1,11 +1,5 @@
-# Pertemuan 7
+pada pertemuan 7, saya melakukan
 
-Selamat datang di folder pertemuan 7.
-
-## Tujuan
-- Mempelajari materi lanjutan pada mata kuliah PWD.
-- Menyimpan catatan, tugas, dan latihan yang terkait dengan pertemuan ini.
-
-## Catatan
-- Gunakan folder ini untuk file tugas, modul, dan latihan.
-- Simpan hasil pekerjaan sesuai materi pertemuan.
+1. menyalin artefak p6 untuk menjadi baseline p7
+2. menguji fitur pada p7, hasilnya jalan seperti p6
+3. meremark event.preventDefault(); pada script.js.
