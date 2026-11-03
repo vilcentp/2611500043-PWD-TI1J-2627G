@@ -5,3 +5,4 @@ pada p8, saya melakukan:
 3. membuat menu Nama Penanggung Jawab, Jenis Fasilitas, Tanggal Peminjaman, Durasi peminjaman, keperluan peminjaman, hasilnya muncul dan berhasil
 4. membuat menu permohonan peminjaman berhasil di proses atau berfungsi dan hasilnya berhasil
 5. Dokumentasi, ketika mengisi data formulir dan permohonan peminjaman fasilitas kampus secara bersamaan .
+6. pengujian permohonan fasilitas kampus berhasil saat di coba
