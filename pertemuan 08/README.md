@@ -6,3 +6,4 @@ pada p8, saya melakukan:
 4. membuat menu permohonan peminjaman berhasil di proses atau berfungsi dan hasilnya berhasil
 5. Dokumentasi, ketika mengisi data formulir dan permohonan peminjaman fasilitas kampus secara bersamaan .
 6. pengujian permohonan fasilitas kampus berhasil saat di coba
+7. saya lupa mengcommit beberapa hal jadinya commit saya cuman sedikit
