@@ -1,223 +1,251 @@
-<?php 
-//p7
-echo $_GET['nama'];
+<?php
+declare(strict_types=1);
+session_start();
 
+/*
+ * Demo mandiri fitur Peminjaman Fasilitas Kampus.
+ * Saat digabung ke proyek lama, pertahankan section dan handler Kontak
+ * yang sudah ada; tambahkan menu/section peminjaman ke template lama.
+ */
 
-    
+$daftarFasilitas = [
+    'Ruang Kelas',
+    'Aula',
+    'Laboratorium Komputer',
+    'Proyektor',
+];
 
+function bersihkanInput(string $nilai): string
+{
+    // Normalisasi whitespace dan buang spasi di awal/akhir.
+    $nilai = trim($nilai);
+    $nilai = preg_replace('/\s+/u', ' ', $nilai) ?? $nilai;
+    return $nilai;
+}
 
+function h(?string $nilai): string
+{
+    return htmlspecialchars($nilai ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
 
+/* Post-Redirect-Get: proses POST, simpan hasil/pesan ke session, lalu redirect. */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nama = bersihkanInput((string)($_POST['nama'] ?? ''));
+    $fasilitas = bersihkanInput((string)($_POST['fasilitas'] ?? ''));
+    $tanggal = bersihkanInput((string)($_POST['tanggal'] ?? ''));
+    $durasiRaw = bersihkanInput((string)($_POST['durasi'] ?? ''));
+    $keperluan = trim((string)($_POST['keperluan'] ?? ''));
+    $keperluan = preg_replace("/\r\n?/", "\n", $keperluan) ?? $keperluan;
+    $keperluan = preg_replace('/[ \t]+/u', ' ', $keperluan) ?? $keperluan;
 
-// P6: PHP dasar dan pemrograman sisi peladen 
-// Bagian 1: Variabel dan konstanta 
-$nim = "2611500043"; 
-$namaMahasiswa = "Vilcent pitersen"; 
-$programStudi = "Teknik Informatika"; 
-$tahunAkademik = "2026/2027"; 
-$semester = 2; 
-$batasSemester = 8; 
-$sisaSemester = $batasSemester - $semester; 
-$statusAktif = true; 
-$semesterValid = $semester >= 1 && $semester <= $batasSemester; 
-$statusSemester = ($semesterValid && $statusAktif) ? "Sesuai rentang" : "Perlu diperiksa"; 
-if ($semester < 3) { 
-    $keteranganSemester = "Semester awal"; 
-} elseif ($semester <= 6) { 
-    $keteranganSemester = "Semester menengah"; 
-} else { 
-    $keteranganSemester = "Semester akhir"; 
-} 
-$namaProdi = ($programStudi == "SI") ? "Sistem Informasi" : (($programStudi == "TI") ? "Teknik 
-Informatika" : "Program Studi Lain"); 
-switch ($programStudi) { 
-  case "SI": 
- $fokusProgramStudi = "Sistem informasi dan proses bisnis"; 
-    break; 
-  case "TI": 
-    $fokusProgramStudi = "Komputasi dan pengembangan perangkat lunak"; 
-    break; 
-  default: 
-    $fokusProgramStudi = "Belum ditentukan"; 
-} 
-$ipk = 4.0; 
-$catatanTambahan = null; 
-?> 
+    $errors = [];
+
+    if ($nama === '') {
+        $errors[] = 'Nama penanggung jawab wajib diisi.';
+    } elseif (mb_strlen($nama) > 100) {
+        $errors[] = 'Nama maksimal 100 karakter.';
+    }
+
+    if (!in_array($fasilitas, $daftarFasilitas, true)) {
+        $errors[] = 'Pilih jenis fasilitas yang tersedia.';
+    }
+
+    $tanggalObj = DateTimeImmutable::createFromFormat('!Y-m-d', $tanggal);
+    $tanggalValid = $tanggalObj && $tanggalObj->format('Y-m-d') === $tanggal;
+    if (!$tanggalValid) {
+        $errors[] = 'Tanggal peminjaman tidak valid.';
+    } elseif ($tanggal < date('Y-m-d')) {
+        $errors[] = 'Tanggal peminjaman tidak boleh sebelum hari ini.';
+    }
+
+    $durasi = filter_var($durasiRaw, FILTER_VALIDATE_INT);
+    if ($durasi === false || $durasi < 1 || $durasi > 24) {
+        $errors[] = 'Durasi peminjaman harus berupa angka 1 sampai 24 jam.';
+    }
+
+    if ($keperluan === '') {
+        $errors[] = 'Keperluan peminjaman wajib diisi.';
+    } elseif (mb_strlen($keperluan) > 1000) {
+        $errors[] = 'Keperluan maksimal 1000 karakter.';
+    }
+
+    if ($errors) {
+        $_SESSION['flash_errors'] = $errors;
+        // Simpan nilai yang sudah dinormalisasi untuk mengisi ulang form.
+        $_SESSION['old_input'] = [
+            'nama' => $nama,
+            'fasilitas' => $fasilitas,
+            'tanggal' => $tanggal,
+            'durasi' => $durasiRaw,
+            'keperluan' => $keperluan,
+        ];
+    } else {
+        $_SESSION['flash_success'] = 'Permohonan berhasil divalidasi dan diproses.';
+        $_SESSION['hasil_peminjaman'] = [
+            'nama' => $nama,
+            'fasilitas' => $fasilitas,
+            'tanggal' => $tanggal,
+            'durasi' => (string)$durasi,
+            'keperluan' => $keperluan,
+        ];
+        unset($_SESSION['old_input']);
+    }
+
+    header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?') . '#peminjaman-fasilitas');
+    exit;
+}
+
+/* Ambil flash data setelah redirect, lalu hapus agar hanya tampil sekali. */
+$errors = $_SESSION['flash_errors'] ?? [];
+$success = $_SESSION['flash_success'] ?? '';
+$hasil = $_SESSION['hasil_peminjaman'] ?? null;
+$old = $_SESSION['old_input'] ?? [];
+unset($_SESSION['flash_errors'], $_SESSION['flash_success'], $_SESSION['old_input']);
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil Mahasiswa</title>
-    <link rel="stylesheet" href="style.css"/>  
+    <title>Sistem Peminjaman Fasilitas Kampus</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 <body>
-<?php
-const NAMA_MATA_KULIAH = "Pemrograman Web Dasar"; 
-const PROFIL_GITHUB = "Marvelq245-wq"; 
-?> 
+<header class="site-header">
+    <nav class="navbar" aria-label="Navigasi utama">
+        <a class="logo" href="#home">Kampus</a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">
+            Menu
+        </button>
+        <ul class="nav-menu" id="nav-menu">
+            <li><a href="#home">Beranda</a></li>
+            <li><a href="#about">Tentang</a></li>
+            <li><a href="#peminjaman-fasilitas">Peminjaman Fasilitas</a></li>
+            <li><a href="#contact">Kontak</a></li>
+        </ul>
+    </nav>
+</header>
 
-    <header>
-        <h1>Profil Mahasiswa</h1>
-        <nav>
-            <button type="button" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Buka navigasi">Menu</button>
-            <ul id="navMenu">
-                <li><a href="#home">Beranda</a></li>
-                <li><a href="#about">Tentang</a></li>
-                <li><a href="#contact">Kontak</a></li>
-            </ul>
-        </nav>  
-    </header>
- <main>
-    <section id="home">
-        <h2>Selamat Datang</h2>
-        <p>Halo, saya <strong><?php echo $namaMahasiswa; ?></strong>. Saya sedang mempelajari matakuliah 
-<strong><?php print NAMA_MATA_KULIAH; ?></strong> pada tahun akademik <?php echo $tahunAkademik; 
-?>.</p> 
-        <img src="img/foto-profile.png" alt="Foto profil Vilcent pitersen, mahasiswa yang sedang mempelajari pemrograman web dasar.">
+<main>
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <p class="eyebrow">Layanan Kampus</p>
+            <h1>Sistem Peminjaman Fasilitas Kampus</h1>
+            <p>Ajukan peminjaman fasilitas kampus melalui formulir yang sederhana.</p>
+            <a class="button button-primary" href="#peminjaman-fasilitas">Ajukan Peminjaman</a>
+        </div>
     </section>
-    <section id="about">
-        <h2>Tentang Saya</h2>
-    <article>
-        <h3>Profil Singkat</h3>
-        <p>Sisa semester hingga batas: <?php echo $sisaSemester; ?></p> 
-        <p>Pemeriksaan rentang semester: <?php echo $statusSemester; ?></p> 
-        <p>Semester: <?php echo $semester . " (" . $keteranganSemester . ")"; ?></p> 
-        <p>Program Studi: <?php echo $namaProdi . " (" . $programStudi . ")"; ?></p> 
-        <p>Fokus program studi: <?php echo $fokusProgramStudi; ?></p> 
-        <p>Status mahasiswa: <?php echo $statusAktif ? "Aktif" : "Tidak aktif"; ?></p> 
-        <p>Saya mahasiswa Program Studi Teknik Informatika.</p>
-        <p>IPK: <?php echo number_format($ipk, 2, ',', '.'); ?></p>
-        <p>Catatan tambahan: <?php echo $catatanTambahan === null ? "Belum ada" : $catatanTambahan; 
-?></p> 
-       <h3>Target Belajar (Perulangan for)</h3> 
-<ol> 
-<?php 
-// Perulangan for tanpa array; materi larik dibahas pada P9. 
-for ($i = 1; $i <= 5; $i++) { 
-echo "<li>Target belajar ke-" . $i . ": "; 
-switch ($i) { 
-case 1: 
-echo "Memahami sintaks dasar PHP."; 
-break; 
-case 2: 
-echo "Menggunakan variabel dan konstanta."; 
-break; 
-case 3: 
-echo "Menerapkan operator dan percabangan."; 
-break; 
-case 4: 
-echo "Menggunakan perulangan for dan while."; 
-break; 
-default: 
-echo "Belum dipetakan"; 
-break; 
-} 
-echo "</li>"; 
-} 
-?> 
-</ol> 
-<h3>Semester (Perulangan while):</h3> 
-<ol> 
-<?php 
-$nomorSemester = 1; 
-while ($nomorSemester <= 3) { 
-echo "<li>Semester " . $nomorSemester . "</li>"; 
-$nomorSemester++; // operator penugasan 
-} 
-?> 
-</ol>
-    </article>
+
+    <section id="about" class="section intro">
+        <h2>Tentang Layanan</h2>
+        <p>Gunakan formulir ini untuk mengajukan penggunaan ruang kelas, aula,
+            laboratorium komputer, atau proyektor. Pengiriman formulir belum
+            berarti permohonan telah disetujui.</p>
     </section>
-<section id="contact">
-    <h2>Kontak</h2>
-   <p> 
-  Kunjungi 
-  <a target="_blank" href="https://github.com/vilcentp/2611500043-PWD-TI1J-2627G.git"<?= PROFIL_GITHUB ?>">profil GitHub saya</a>. 
-</p> 
-  <form id="contactForm" action="index.php" method="get" novalidate> 
-<div class="form-group">
-<label for="nama">Nama Lengkap</label><br>
-<input class="input-form"
-type="text"
-id="nama"
-name="nama"
-placeholder="Masukkan nama lengkap"
-minlength="3"
-maxlength="50"
-required>
-</div>
-<div class="form-group">
-<label for="email">Email</label><br>
-<input class="input-form"
-type="email"
-id="email"
-name="email"
-placeholder="nama@email.com"
-required>
-</div>
-<div class="form-group">
-<label for="semester">Semester</label><br>
-<input class="input-form"
-type="number"
-id="semester"
-name="semester"
-min="1"
-max="14"
-required>
-</div>
-<div class="form-group">
-    <label for="tanggal">Tanggal Kunjungan</label><br>
-    <input class="input-form" 
-type="date"
-id="tanggal"
-name="tanggal"
-required>
-</div>
-<div class="form-group">
-    <p>Jenis Pesan</p>
-    <input type="radio" id="pertanyaan" name="jenis_pesan"
-value="Pertanyaan" required>
-    <label for="pertanyaan">Pertanyaan</label><br> 
-    <input type="radio" id="saran" name="jenis_pesan"
-value="Saran">
-    <label for="saran">Saran</label>
-</div>
-<div class="form-group">
-    <p>Topik yang Diminati</p>
-    <input type="checkbox" id="minat-html" name="minat" value="HTML">
-    <label for="minat-html">HTML</label>
-    <input type="checkbox" id="minat-css" name="minat" value="CSS">
-    <label for="minat-css">CSS</label>
-    </div>
-   <div class="form-group">
-    <label for="prodi">Program Studi</label><br>
-    <select class="input-form" id="prodi" name="prodi" required>
-        <option value="">Pilih Program Studi</option>
-        <option value="Teknik Informatika">Teknik Informatika</option>
-        <option value="Sistem Informasi">Sistem Informasi</option>
-        <option value="Teknologi Informasi">Teknologi Informasi</option>
-    </select>
-</div>
-<div class="form-group">
-    <label for="pesan">Pesan</label><br>
-    <textarea class="input-form" 
-    id="pesan" 
-    name="pesan"
-    maxlength="300"
-    placeholder="Tulis pesan Anda di sini"
-    required></textarea>
-</div>
-<p id="formFeedback" aria-live="polite"></p>
-<div class="form-group">
-    <button type="submit">Kirim</button>
-    <button type="reset">Batal</button>
-    </div>
-</form>
-</section>
- </main>
-    <footer>
-    <p>&copy; <?= date("Y") ?> <?php echo $namaMahasiswa; ?> [<?= $nim ?>]</p> 
-    </footer>
-    <script src="script.js"></script>
+
+    <!-- Section baru ditempatkan sebelum section#contact. -->
+    <section id="peminjaman-fasilitas" class="section section-tinted">
+        <div class="form-card">
+            <p class="eyebrow">Formulir</p>
+            <h2>Permohonan Peminjaman Fasilitas Kampus</h2>
+            <p class="muted">Lengkapi semua kolom bertanda wajib.</p>
+
+            <?php if ($success !== ''): ?>
+                <div class="notice notice-success" role="status"><?= h($success) ?></div>
+            <?php endif; ?>
+
+            <?php if ($errors): ?>
+                <div class="notice notice-error" role="alert">
+                    <strong>Periksa kembali data berikut:</strong>
+                    <ul>
+                        <?php foreach ($errors as $error): ?>
+                            <li><?= h($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
+            <form id="form-peminjaman" method="POST" action="#peminjaman-fasilitas" novalidate>
+                <div class="form-group">
+                    <label for="nama">Nama Penanggung Jawab <span aria-hidden="true">*</span></label>
+                    <input type="text" id="nama" name="nama" maxlength="100"
+                           autocomplete="name" required
+                           value="<?= h($old['nama'] ?? '') ?>"
+                           placeholder="Masukkan nama lengkap">
+                    <small class="field-error" id="nama-error"></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="fasilitas">Jenis Fasilitas <span aria-hidden="true">*</span></label>
+                    <select id="fasilitas" name="fasilitas" required>
+                        <option value="">-- Pilih fasilitas --</option>
+                        <?php foreach ($daftarFasilitas as $item): ?>
+                            <option value="<?= h($item) ?>"
+                                <?= (($old['fasilitas'] ?? '') === $item) ? 'selected' : '' ?>>
+                                <?= h($item) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small class="field-error" id="fasilitas-error"></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="tanggal">Tanggal Peminjaman <span aria-hidden="true">*</span></label>
+                    <input type="date" id="tanggal" name="tanggal"
+                           min="<?= h(date('Y-m-d')) ?>" required
+                           value="<?= h($old['tanggal'] ?? '') ?>">
+                    <small class="field-error" id="tanggal-error"></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="durasi">Durasi Peminjaman (jam) <span aria-hidden="true">*</span></label>
+                    <input type="number" id="durasi" name="durasi" min="1" max="24"
+                           step="1" required value="<?= h($old['durasi'] ?? '') ?>"
+                           placeholder="Contoh: 3">
+                    <small class="field-error" id="durasi-error"></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="keperluan">Keperluan Peminjaman <span aria-hidden="true">*</span></label>
+                    <textarea id="keperluan" name="keperluan" rows="4" maxlength="1000"
+                              required placeholder="Jelaskan keperluan peminjaman"><?= h($old['keperluan'] ?? '') ?></textarea>
+                    <small class="field-error" id="keperluan-error"></small>
+                </div>
+
+                <div class="button-row">
+                    <button class="button button-primary" type="submit">Kirim</button>
+                    <button class="button button-secondary" type="reset">Batal</button>
+                </div>
+                <p class="form-note">* Wajib diisi. Data diproses menggunakan PHP dan metode POST.</p>
+            </form>
+        </div>
+
+        <?php if (is_array($hasil)): ?>
+            <div class="result-card" aria-live="polite">
+                <h2>Data Permohonan yang Diproses</h2>
+                <p class="muted">Data lolos validasi. Persetujuan fasilitas tetap mengikuti prosedur kampus.</p>
+                <dl class="result-list">
+                    <div><dt>Nama Penanggung Jawab</dt><dd><?= h($hasil['nama']) ?></dd></div>
+                    <div><dt>Jenis Fasilitas</dt><dd><?= h($hasil['fasilitas']) ?></dd></div>
+                    <div><dt>Tanggal Peminjaman</dt><dd><?= h($hasil['tanggal']) ?></dd></div>
+                    <div><dt>Durasi</dt><dd><?= h($hasil['durasi']) ?> jam</dd></div>
+                    <div><dt>Keperluan</dt><dd><?= nl2br(h($hasil['keperluan'])) ?></dd></div>
+                </dl>
+            </div>
+        <?php endif; ?>
+    </section>
+
+    <!-- Section Kontak tetap tersedia dan tidak digunakan untuk peminjaman. -->
+    <section id="contact" class="section contact-section">
+        <h2>Kontak</h2>
+        <p>Untuk pertanyaan lebih lanjut, silakan hubungi bagian administrasi kampus.</p>
+        <!-- Jika proyek lama memiliki formulir/handler Kontak, pertahankan kode aslinya di sini. -->
+    </section>
+</main>
+
+<footer class="site-footer">
+    <p>&copy; <?= date('Y') ?> Sistem Informasi Kampus</p>
+</footer>
 </body>
 </html>

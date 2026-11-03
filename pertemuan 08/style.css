@@ -79,6 +79,39 @@ section {
   width: 100%;
 }
 
+.hasil-get {
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+  border: 1px solid #bfdbfe;
+  border-left: 5px solid #2563eb;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 0;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
+.hasil-get h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #1d4ed8;
+}
+
+.hasil-get-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 20px;
+}
+
+.hasil-get-grid p {
+  margin: 0;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+  line-height: 1.5;
+}
+
+.hasil-get-pesan {
+  grid-column: 1 / -1;
+}
+
 /* Bagian Home */
 #home {
   background-color: #ffffff;

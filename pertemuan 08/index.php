@@ -2,7 +2,7 @@
 session_start();
 
 // P7: Memproses data formulir dan menyimpannya ke dalam session.
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["nama"])) {
 	$nama = trim((string) ($_POST["nama"] ?? ""));
 	$email = trim((string) ($_POST["email"] ?? ""));
 	$semesterForm = trim((string) ($_POST["semester"] ?? ""));
@@ -31,12 +31,88 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 	header("Location: index.php#contact");
 	exit;
 }
+// P8: Pemrosesan Formulir Peminjaman Fasilitas Kampus
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST' &&
+    isset($_POST['nama_penanggung_jawab'])
+) {
+    // Normalisasi masukan
+    $nama = trim($_POST['nama_penanggung_jawab'] ?? '');
+    $fasilitas = trim($_POST['jenis_fasilitas'] ?? '');
+    $tanggal = trim($_POST['tanggal_peminjaman'] ?? '');
+    $durasi = filter_var(
+        $_POST['durasi_peminjaman'] ?? '',
+        FILTER_VALIDATE_INT
+    );
+    $keperluan = trim($_POST['keperluan_peminjaman'] ?? '');
+
+    // Pilihan fasilitas yang diperbolehkan
+    $daftarFasilitas = [
+        'Ruang Kelas',
+        'Aula',
+        'Laboratorium Komputer',
+        'Proyektor'
+    ];
+
+    // Validasi PHP
+    $errors = [];
+
+    if ($nama === '') {
+        $errors[] = 'Nama penanggung jawab wajib diisi.';
+    }
+
+    if (!in_array($fasilitas, $daftarFasilitas, true)) {
+        $errors[] = 'Jenis fasilitas tidak valid.';
+    }
+
+    $tanggalValid = DateTime::createFromFormat('Y-m-d', $tanggal);
+
+    if (
+        !$tanggalValid ||
+        $tanggalValid->format('Y-m-d') !== $tanggal
+    ) {
+        $errors[] = 'Tanggal peminjaman tidak valid.';
+    }
+
+    if ($durasi === false || $durasi < 1) {
+        $errors[] = 'Durasi peminjaman minimal 1 jam.';
+    }
+
+    if ($keperluan === '') {
+        $errors[] = 'Keperluan peminjaman wajib diisi.';
+    }
+
+    // Simpan hasil ke session
+    if (empty($errors)) {
+        $_SESSION['hasil_peminjaman'] = [
+            'status' => 'berhasil',
+            'nama' => $nama,
+            'fasilitas' => $fasilitas,
+            'tanggal' => $tanggal,
+            'durasi' => $durasi,
+            'keperluan' => $keperluan
+        ];
+    } else {
+        $_SESSION['hasil_peminjaman'] = [
+            'status' => 'gagal',
+            'errors' => $errors
+        ];
+    }
+
+    // Post-Redirect-Get (PRG)
+    header('Location: index.php#peminjaman');
+    exit;
+}
+
+// Ambil hasil dari session setelah redirect
+$hasilPeminjaman = $_SESSION['hasil_peminjaman'] ?? null;
+unset($_SESSION['hasil_peminjaman']);
 
 // Mengamankan data sebelum ditampilkan kembali ke halaman HTML.
 // P6: PHP dasar dan pemrograman sisi peladen
 // Bagian 1: Variabel dan konstanta
 $nim = "2611500043";
-$namaMahasiswa = "Vilcent pitersen";
+$namaMahasiswa = " Vilcent pitersen";
 $programStudi = "TI";
 $tahunAkademik = "2026/2027";
 $semester = 1;
@@ -45,7 +121,7 @@ $statusAktif = true;
 $catatanTambahan = null;
 
 const NAMA_MATA_KULIAH = "Pemrograman Web Dasar";
-const PROFIL_GITHUB = "satpamal";
+const PROFIL_GITHUB = "vilcentp";
 
 // Bagian 2: Operator
 $batasSemester = 8;
@@ -106,6 +182,7 @@ switch ($programStudi) {
 			<ul id="navMenu">
 				<li><a href="#home">Beranda</a></li>
 				<li><a href="#about">Tentang</a></li>
+				<li><a href="#peminjaman">Peminjaman Fasilitas</a></li>
 				<li><a href="#contact">Kontak</a></li>
 			</ul>
 		</nav>
@@ -116,9 +193,8 @@ switch ($programStudi) {
 			<h2>Selamat Datang</h2>
 			<p>Halo, saya <strong><?php echo $namaMahasiswa; ?></strong>. Saya sedang mempelajari matakuliah <strong><?php print NAMA_MATA_KULIAH; ?></strong> pada tahun akademik <?php echo $tahunAkademik; ?>.</p>
 
-			<img src="img/foto-profil.jpeg" alt="Foto profil Nama Mahasiswa" />
-		</section>
-
+			<img src="img/foto-profil.png" alt="Foto profil Nama Mahasiswa" width="200">
+</section>
 		<section id="about">
 			<h2>Tentang Saya</h2>
 
@@ -173,7 +249,102 @@ switch ($programStudi) {
 				</ol>
 			</article>
 		</section>
+<!-- P8: Formulir Permohonan Peminjaman Fasilitas Kampus -->
+<section id="peminjaman">
+    <h2>Permohonan Peminjaman Fasilitas Kampus</h2>
 
+    <form id="peminjamanForm" action="index.php" method="post">
+
+        <div class="form-group">
+            <label for="nama_penanggung_jawab">Nama Penanggung Jawab</label><br>
+            <input class="input-form" type="text"
+                id="nama_penanggung_jawab"
+                name="nama_penanggung_jawab"
+                placeholder="Masukkan nama penanggung jawab" required>
+        </div>
+
+        <div class="form-group">
+            <label for="jenis_fasilitas">Jenis Fasilitas</label><br>
+            <select class="input-form" id="jenis_fasilitas"
+                name="jenis_fasilitas" required>
+                <option value="">-- Pilih Fasilitas --</option>
+                <option value="Ruang Kelas">Ruang Kelas</option>
+                <option value="Aula">Aula</option>
+                <option value="Laboratorium Komputer">Laboratorium Komputer</option>
+                <option value="Proyektor">Proyektor</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="tanggal_peminjaman">Tanggal Peminjaman</label><br>
+            <input class="input-form" type="date"
+                id="tanggal_peminjaman"
+                name="tanggal_peminjaman" required>
+        </div>
+
+        <div class="form-group">
+            <label for="durasi_peminjaman">Durasi Peminjaman (Jam)</label><br>
+            <input class="input-form" type="number"
+                id="durasi_peminjaman"
+                name="durasi_peminjaman"
+                min="1"
+                placeholder="Masukkan durasi peminjaman" required>
+        </div>
+
+        <div class="form-group">
+            <label for="keperluan_peminjaman">Keperluan Peminjaman</label><br>
+            <textarea class="input-form"
+                id="keperluan_peminjaman"
+                name="keperluan_peminjaman"
+                placeholder="Jelaskan keperluan peminjaman" required></textarea>
+        </div>
+
+        <button type="submit">Kirim</button>
+        <button type="reset">Batal</button>
+
+    </form>
+	<?php if ($hasilPeminjaman !== null): ?>
+
+        <article class="submission-result">
+            <?php if ($hasilPeminjaman["status"] === "berhasil"): ?>
+
+                <h3>Permohonan Berhasil Diproses</h3>
+
+                <p><strong>Nama Penanggung Jawab:</strong>
+                    <?= htmlspecialchars($hasilPeminjaman["nama"], ENT_QUOTES, "UTF-8") ?>
+                </p>
+
+                <p><strong>Jenis Fasilitas:</strong>
+                    <?= htmlspecialchars($hasilPeminjaman["fasilitas"], ENT_QUOTES, "UTF-8") ?>
+                </p>
+
+                <p><strong>Tanggal Peminjaman:</strong>
+                    <?= htmlspecialchars($hasilPeminjaman["tanggal"], ENT_QUOTES, "UTF-8") ?>
+                </p>
+
+                <p><strong>Durasi Peminjaman:</strong>
+                    <?= htmlspecialchars((string) $hasilPeminjaman["durasi"], ENT_QUOTES, "UTF-8") ?> jam
+                </p>
+
+                <p><strong>Keperluan Peminjaman:</strong>
+                    <?= nl2br(htmlspecialchars($hasilPeminjaman["keperluan"], ENT_QUOTES, "UTF-8")) ?>
+                </p>
+
+            <?php else: ?>
+
+                <h3>Permohonan Gagal Diproses</h3>
+
+                <ul>
+                    <?php foreach ($hasilPeminjaman["errors"] as $error): ?>
+                        <li><?= htmlspecialchars($error, ENT_QUOTES, "UTF-8") ?></li>
+                    <?php endforeach; ?>
+                </ul>
+
+            <?php endif; ?>
+        </article>
+
+    <?php endif; ?>
+</section>
 		<section id="contact">
 			<h2>Kontak</h2>
 
